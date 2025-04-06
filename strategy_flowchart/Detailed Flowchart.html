@@ -1,0 +1,308 @@
+
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Adaptive PMM Strategy Flowchart</title>
+        <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 20px;
+                background-color: #f5f5f5;
+            }
+            .container {
+                background-color: white;
+                padding: 20px;
+                border-radius: 5px;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                margin-bottom: 20px;
+            }
+            h1 {
+                color: #333;
+                border-bottom: 1px solid #ddd;
+                padding-bottom: 10px;
+            }
+            .mermaid {
+                overflow: auto;
+            }
+            .legend {
+                display: flex;
+                flex-wrap: wrap;
+                margin-top: 20px;
+                border-top: 1px solid #ddd;
+                padding-top: 10px;
+            }
+            .legend-item {
+                display: flex;
+                align-items: center;
+                margin-right: 20px;
+                margin-bottom: 10px;
+            }
+            .legend-color {
+                width: 20px;
+                height: 20px;
+                margin-right: 5px;
+                border: 1px solid #333;
+            }
+            .start-color { background-color: #A5D6A7; }
+            .process-color { background-color: #90CAF9; }
+            .decision-color { background-color: #FFE082; }
+            .regime-color { background-color: #CE93D8; }
+            .explanation {
+                margin-top: 20px;
+                line-height: 1.5;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Adaptive PMM Trading Strategy Flowchart</h1>
+
+            <div class="explanation">
+                <p>This flowchart illustrates the complete workflow of the Adaptive PMM (Predictive Market Making) strategy,
+                which combines multi-timeframe analysis, dynamic parameter adjustment, and market regime detection to optimize
+                market making in cryptocurrency markets.</p>
+
+                <p>The strategy analyzes market conditions using technical indicators (RSI, NATR, ADX, Moving Averages)
+                across different timeframes (1m, 15m, 1h) to classify the current market into one of six regimes:
+                Trending Up, Trending Down, Ranging, Volatile, Neutral, or Rebounding.</p>
+
+                <p>Based on the detected regime, the strategy dynamically adjusts its parameters including spreads,
+                reference price, inventory targets, and order sizes to optimize performance in different market conditions.</p>
+            </div>
+
+            <div class="mermaid">
+    
+flowchart TD
+    %% Main Strategy Components
+    start([Start Adaptive PMM]) --> init[Initialize Strategy Parameters]
+    init --> setup_candles[Setup Multi-Timeframe Candles
+1m, 15m, 1h]
+    setup_candles --> initial_buy{Initial Market
+Buy Enabled?}
+    initial_buy -->|Yes| execute_initial_buy[Execute Initial Market Buy]
+    initial_buy -->|No| main_loop
+    execute_initial_buy --> main_loop
+
+    %% Main Trading Loop
+    main_loop[Trading Loop
+On Each Tick] --> check_circuit{Check Circuit
+Breaker Status}
+    check_circuit -->|Active| wait[Wait for Circuit
+Breaker to Expire]
+    wait --> main_loop
+
+    %% Market Regime Detection
+    check_circuit -->|Inactive| get_data[Get Multi-Timeframe
+Candle Data]
+    get_data --> calculate_indicators[Calculate Technical Indicators
+RSI, NATR, ADX, MAs, MACD, BBands]
+    calculate_indicators --> detect_regime[Detect Market Regime]
+
+    %% Market Regime Decision Tree
+    detect_regime --> check_volatility{High Volatility?
+NATR > 3%}
+    check_volatility -->|Yes| set_volatile[Set Regime: Volatile]
+    check_volatility -->|No| check_adx{Strong Trend?
+ADX > 25}
+
+    check_adx -->|Yes| check_direction{Determine Direction}
+    check_direction --> check_rsi{Check RSI Values
+Short/Med/Long Timeframes}
+    check_rsi -->|Bullish| check_ma{Confirm with MA
+Crossovers/Slopes}
+    check_rsi -->|Bearish| check_ma_bear{Confirm with MA
+Crossovers/Slopes}
+
+    check_ma -->|Confirmed| set_uptrend[Set Regime: Trending Up]
+    check_ma -->|Not Confirmed| set_neutral1[Set Regime: Neutral]
+    check_ma_bear -->|Confirmed| set_downtrend[Set Regime: Trending Down]
+    check_ma_bear -->|Not Confirmed| set_neutral2[Set Regime: Neutral]
+
+    check_adx -->|No| check_ranging{Ranging Market?
+RSI 40-60 & ADX < 20}
+    check_ranging -->|Yes| set_ranging[Set Regime: Ranging]
+    check_ranging -->|No| check_rebound{Rebound Pattern?
+RSI Rising From Low + Price Stabilizing}
+    check_rebound -->|Yes| set_rebound[Set Regime: Rebounding]
+    check_rebound -->|No| set_neutral3[Set Regime: Neutral]
+
+    %% Parameters Update
+    set_volatile --> update_params[Update Strategy Parameters]
+    set_uptrend --> update_params
+    set_downtrend --> update_params
+    set_ranging --> update_params
+    set_rebound --> update_params
+    set_neutral1 --> update_params
+    set_neutral2 --> update_params
+    set_neutral3 --> update_params
+
+    %% Parameter Update Components
+    update_params --> update_spreads[Update Volatility-Based Spreads]
+    update_params --> update_price[Update Trend-Based Price Reference]
+    update_params --> update_inventory[Update Inventory Management]
+    update_params --> update_sizing[Update Momentum-Based Order Sizing]
+
+    %% Spread Adjustment Detail
+    update_spreads --> get_natr[Get NATR from Short Timeframe]
+    get_natr --> calc_base_spread[Calculate Base Spread = NATR * Volatility Scalar]
+    calc_base_spread --> check_regime_spreads{Check Current Regime}
+    check_regime_spreads -->|Trending Up| apply_uptrend_spreads[Apply Asymmetric Spreads
+Tighter Buys, Wider Sells]
+    check_regime_spreads -->|Trending Down| apply_downtrend_spreads[Apply Asymmetric Spreads
+Tighter Sells, Wider Buys]
+    check_regime_spreads -->|Rebounding| apply_rebound_spreads[Apply Accumulation Spreads
+Tight Buy, Wide Sell]
+    check_regime_spreads -->|Other| apply_normal_spreads[Apply Normal Spreads]
+
+    %% Price Reference Adjustment
+    update_price --> get_rsi[Get RSI from Medium Timeframe]
+    get_rsi --> calc_rsi_shift[Calculate Price Shift Based on RSI Deviation from 50]
+    calc_rsi_shift --> check_ma_conf{Check MA Confirmation}
+    check_ma_conf -->|Confirmed| calc_ma_shift[Calculate MA Crossover Strength]
+    check_ma_conf -->|Not Available| skip_ma[Skip MA Confirmation]
+    calc_ma_shift --> combine_signals[Combine RSI and MA Signals]
+    skip_ma --> combine_signals
+    combine_signals --> adjust_by_regime[Adjust Signal Strength by Current Regime]
+    adjust_by_regime --> apply_price_shift[Apply Price Shift to Reference Price]
+
+    %% Inventory Management
+    update_inventory --> get_target[Get Dynamic Inventory Target for Current Regime]
+    get_target --> calc_current_ratio[Calculate Current Base/Quote Ratio]
+    calc_current_ratio --> calc_deviation[Calculate Deviation from Target]
+    calc_deviation --> calc_inventory_shift[Calculate Inventory-Based Price Shift]
+    calc_inventory_shift --> apply_inventory_shift[Apply Inventory Shift to Reference Price]
+
+    %% Order Sizing
+    update_sizing --> calc_momentum[Calculate Momentum Across Timeframes]
+    calc_momentum --> check_momentum_regime{Check if Trending Up
+or Rebounding}
+    check_momentum_regime -->|Yes| adjust_sizes[Adjust Buy/Sell Sizes Based on Momentum]
+    check_momentum_regime -->|No| reset_sizes[Reset to Default Order Sizes]
+
+    %% Risk Management and Order Placement
+    update_spreads --> continue1[Continue]
+    update_price --> continue1
+    update_inventory --> continue1
+    update_sizing --> continue1
+    continue1 --> manage_take_profit[Manage Trailing Take-Profit
+if in Uptrend]
+
+    manage_take_profit --> check_risk{Apply Risk Management}
+    check_risk -->|Failed| wait_next[Wait for Next Cycle]
+    check_risk -->|Passed| cancel_orders[Cancel All Active Orders]
+
+    cancel_orders --> create_proposal[Create Order Proposal]
+    create_proposal --> adjust_budget[Adjust Proposal to Budget]
+    adjust_budget --> place_orders[Place Orders]
+
+    place_orders --> check_current_regime{Current Regime?}
+    check_current_regime -->|Trending Up or Rebounding| setup_ladders[Setup Profit-Taking Ladders]
+    check_current_regime -->|Other| skip_ladders[Skip Profit Ladders]
+
+    setup_ladders --> wait_next
+    skip_ladders --> wait_next
+    wait_next --> update_chart[Update Price Chart]
+    update_chart --> main_loop
+
+    %% Style definitions
+    classDef process fill:#90CAF9,stroke:#0D47A1,color:black;
+    classDef decision fill:#FFE082,stroke:#FF6F00,color:black;
+    classDef start fill:#A5D6A7,stroke:#1B5E20,color:black;
+    classDef regimes fill:#CE93D8,stroke:#4A148C,color:black;
+
+    %% Apply styles
+    class start,init,setup_candles,execute_initial_buy start;
+    class check_circuit,initial_buy,check_volatility,check_adx,check_direction,check_rsi,check_ma,check_ma_bear,check_ranging,check_rebound,check_momentum_regime,check_risk,check_current_regime,check_regime_spreads,check_ma_conf decision;
+    class set_volatile,set_uptrend,set_downtrend,set_ranging,set_rebound,set_neutral1,set_neutral2,set_neutral3 regimes;
+    class main_loop,wait,get_data,calculate_indicators,detect_regime,update_params,update_spreads,update_price,update_inventory,update_sizing,get_natr,calc_base_spread,apply_uptrend_spreads,apply_downtrend_spreads,apply_rebound_spreads,apply_normal_spreads,get_rsi,calc_rsi_shift,calc_ma_shift,skip_ma,combine_signals,adjust_by_regime,apply_price_shift,get_target,calc_current_ratio,calc_deviation,calc_inventory_shift,apply_inventory_shift,calc_momentum,adjust_sizes,reset_sizes,manage_take_profit,cancel_orders,create_proposal,adjust_budget,place_orders,setup_ladders,skip_ladders,wait_next,update_chart process;
+    
+            </div>
+
+            <div class="legend">
+                <h3>Legend:</h3>
+                <div class="legend-item">
+                    <div class="legend-color start-color"></div>
+                    <div>Initialization</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color process-color"></div>
+                    <div>Process</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color decision-color"></div>
+                    <div>Decision</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color regime-color"></div>
+                    <div>Market Regime</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <h2>Key Components Explanation</h2>
+
+            <h3>1. Market Regime Detection</h3>
+            <p>The strategy analyzes multiple timeframes to detect the current market regime:</p>
+            <ul>
+                <li><strong>Trending Up:</strong> Strong upward momentum with confirming indicators (RSI > 55/50/45, MA crossovers)</li>
+                <li><strong>Trending Down:</strong> Strong downward momentum with confirming indicators</li>
+                <li><strong>Volatile:</strong> High price fluctuations (NATR > 3%)</li>
+                <li><strong>Ranging:</strong> Sideways movement with low volatility (RSI between 40-60, ADX < 20)</li>
+                <li><strong>Rebounding:</strong> Potential reversal from downtrend (RSI rising from lows, price stabilizing)</li>
+                <li><strong>Neutral:</strong> No clear regime detected</li>
+            </ul>
+
+            <h3>2. Dynamic Parameter Adjustment</h3>
+            <p>Based on the detected regime, the strategy adjusts four key parameters:</p>
+            <ul>
+                <li><strong>Volatility-Based Spreads:</strong> Widens or narrows spreads based on market volatility and applies asymmetric spreads based on trend direction</li>
+                <li><strong>Trend-Based Price Shifting:</strong> Shifts reference price based on trend strength using RSI deviation and MA confirmation</li>
+                <li><strong>Inventory Management:</strong> Adjusts target inventory ratio based on market regime (85% base asset in uptrends, 40% in downtrends)</li>
+                <li><strong>Momentum-Based Order Sizing:</strong> Increases buy order size in strong uptrends (up to 3x normal)</li>
+            </ul>
+
+            <h3>3. Risk Management</h3>
+            <p>The strategy includes comprehensive risk management:</p>
+            <ul>
+                <li><strong>Circuit Breakers:</strong> Pauses trading during extreme price movements (5% downside, 8% upside)</li>
+                <li><strong>Position Size Limits:</strong> Ensures no single position exceeds 10% of portfolio</li>
+                <li><strong>Trailing Take-Profits:</strong> In uptrends, implements trailing stops to lock in profits</li>
+            </ul>
+
+            <h3>4. Order Placement</h3>
+            <p>Places optimized orders based on all computed parameters:</p>
+            <ul>
+                <li><strong>Standard Orders:</strong> Buy and sell at calculated prices with optimized spreads</li>
+                <li><strong>Profit-Taking Ladders:</strong> In uptrends/rebounds, places multiple sell orders at progressively higher prices</li>
+            </ul>
+
+            <h3>5. Technical Indicators Used</h3>
+            <p>The strategy relies on several key technical indicators:</p>
+            <ul>
+                <li><strong>RSI (Relative Strength Index):</strong> Used for trend direction and momentum assessment</li>
+                <li><strong>NATR (Normalized Average True Range):</strong> Used to measure market volatility and adjust spreads accordingly</li>
+                <li><strong>ADX (Average Directional Index):</strong> Used to determine trend strength</li>
+                <li><strong>Moving Averages:</strong> Used for trend confirmation via crossovers and slope analysis</li>
+                <li><strong>Bollinger Bands:</strong> Used for range identification</li>
+                <li><strong>MACD:</strong> Used as additional trend confirmation</li>
+            </ul>
+        </div>
+
+        <script>
+            mermaid.initialize({
+                startOnLoad: true,
+                theme: 'default',
+                securityLevel: 'loose',
+                flowchart: {
+                    useMaxWidth: false,
+                    htmlLabels: true
+                }
+            });
+        </script>
+    </body>
+    </html>
+    
